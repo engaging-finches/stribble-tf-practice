@@ -1,3 +1,3 @@
 variable "resource_group_name" {
-  default = "stribbleNewResourceGroupName"
+  default = "RG-SLOANE_TRIBBLE-bootcamp"
 }
