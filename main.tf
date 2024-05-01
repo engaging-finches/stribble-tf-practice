@@ -34,5 +34,6 @@ resource "aws_instance" "app_server" {
     Owner        = "stribble"
     Appliocaiton = "app_server"
     Environment  = "test"
+    Test_tag     = "true"
   }
 }
