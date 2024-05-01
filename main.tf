@@ -35,5 +35,6 @@ resource "aws_instance" "app_server" {
     Appliocaiton = "app_server"
     Environment  = "test"
     Test_tag     = "true"
+    Myles_was_here = "true"
   }
 }
