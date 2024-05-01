@@ -9,36 +9,40 @@ permissions:
     contents: read
 
 jobs:
-    
     terraform:
-        name: 'Terraform'
+        name: Terraform
+        env:
+            ARM_USE_OIDC: true
+            # ARM_OIDC_TOKEN: ${{ secrets.AZURE_CREDENTIALS }}
+            ARM_CLIENT_ID: ${{ secrets.CALVIN_AZURE_CLIENT_ID }}
+            # ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+            # ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            ARM_TENANT_ID: ${{ secrets.CALVIN_AZURE_TENANT_ID }}
         runs-on: ubuntu-latest
-        steps:
-            - name: 'Configure AWS Credentials'
-              uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
-              with:
-                aws-region: us-east-1
-                role-to-assume: arn:aws:iam::851725365087:role/stribble-github-oidc
-                role-session-name: GitHubActions
-            
-            - name: 'Checkout'
-              uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        steps:            
+            - name: Checkout
+              uses: actions/checkout@v4
 
-            - name: 'Setup Terraform'
-              uses: hashicorp/setup-terraform@97f030cf6dc0b4f5e0da352c7bca9cca34579800 # v3.1.0
+            # - name: Log in with Azure
+            #   uses: azure/login@v1
+            #   with:
+            #     creds: '${{ secrets.AZURE_CREDENTIALS }}'
+              
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
 
-            - name: 'Terraform Format'
+            - name: Terraform Format
               id: fmt
               run: terraform fmt -check
 
-            - name: 'Terraform Init'
+            - name: Terraform Init
               id: init
               run: terraform init
 
-            - name: 'Terraform Validate'
+            - name: Terraform Validate
               id: validate
               run: terraform validate -no-color
 
-            - name: 'Terraform Plan'
+            - name: Terraform Plan
               id: plan
               run: terraform plan -no-color
