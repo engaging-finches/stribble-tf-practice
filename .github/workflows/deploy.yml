@@ -1,35 +1,50 @@
-name: 'Deployment Action'
+name: 'Terraform Apply'
+
 on:
   push:
     branches:
-      - main
+    - main
 
+#Special permissions required for OIDC authentication
 permissions:
-    id-token: write
-    contents: read
+  id-token: write
+  contents: read
+  pull-requests: write
+
+#These environment variables are used by the terraform azure provider to setup OIDD authenticate. 
+env:
+  ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
+  ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+  ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
 
 jobs:
-  deploy:
-    name: 'Deploy'
+  terraform-apply:
+    name: 'Terraform Apply'
     runs-on: ubuntu-latest
+    env:
+      #this is needed since we are running terraform with read-only permissions
+      ARM_SKIP_PROVIDER_REGISTRATION: true
+    outputs:
+      tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
+
     steps:
-      - name: 'Configure AWS Credentials'
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
-        with:
-          aws-region: us-east-1
-          role-to-assume: arn:aws:iam::851725365087:role/stribble-github-oidc
-          role-session-name: GitHubActions
-            
-      - name: 'Checkout'
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: 'Setup Terraform'
-        uses: hashicorp/setup-terraform@97f030cf6dc0b4f5e0da352c7bca9cca34579800 # v3.1.0
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_wrapper: false
 
-      - name: 'Terraform Init'
-        id: init
-        run: terraform init
+    - name: Azure login
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: 'Terraform Apply'
-        id: apply
-        run: terraform apply --auto-approve -no-color
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Apply
+      run: terraform apply --auto-approve -no-color
